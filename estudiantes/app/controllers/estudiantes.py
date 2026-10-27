@@ -1,9 +1,12 @@
-
 import json
 import re
 from flask import Blueprint, jsonify, request
 
 estudiantes_endpoints = Blueprint('estudiantes_endpoints', __name__)
+
+# ==========================================
+# Endpoints de la práctica anterior
+# ==========================================
 
 @estudiantes_endpoints.route('/hola', methods=['GET'])
 def hola():
@@ -92,4 +95,85 @@ def saludo(nombre=None, apellido=None):
     }), 200
 
 
+# ==========================================
+# Nuevos Endpoints: Métodos HTTP (GET, POST, PUT, DELETE)
+# ==========================================
 
+# 1. Obtener todos los estudiantes
+# Método: GET /estudiantes
+@estudiantes_endpoints.route('/estudiantes', methods=['GET'])
+@estudiantes_endpoints.route('/estudiantes/', methods=['GET'])
+def get_estudiantes():
+    return jsonify({
+        "mensaje": "Lista de estudiantes obtenida correctamente.",
+        "estudiantes": [
+            "Ana",
+            "Carlos",
+            "María"
+        ]
+    }), 200
+
+
+# 2. Agregar un estudiante
+# Método: POST /estudiantes
+@estudiantes_endpoints.route('/estudiantes', methods=['POST'])
+@estudiantes_endpoints.route('/estudiantes/', methods=['POST'])
+def add_estudiante():
+    data = None
+    try:
+        data = request.get_json(force=True, silent=True)
+    except Exception:
+        pass
+
+    if not isinstance(data, dict) and request.data:
+        try:
+            raw_text = request.data.decode('utf-8', errors='ignore').strip()
+            if raw_text:
+                data = json.loads(raw_text)
+        except Exception:
+            try:
+                raw_text = request.data.decode('utf-8', errors='ignore')
+                m = re.search(r'["\']?nombre["\']?\s*[:=]\s*["\']([^"\']+)["\']', raw_text, re.IGNORECASE)
+                if m:
+                    data = {'nombre': m.group(1).strip()}
+            except Exception:
+                pass
+
+    nombre = "Pedro"
+    if isinstance(data, dict) and data.get('nombre'):
+        nombre = str(data['nombre']).strip()
+
+    return jsonify({
+        "mensaje": "Estudiante agregado correctamente.",
+        "estudiante": nombre
+    }), 200
+
+
+# 3. Actualizar un estudiante
+# Método: PUT /estudiantes/<id>
+@estudiantes_endpoints.route('/estudiantes/<id>', methods=['PUT'])
+def update_estudiante(id):
+    try:
+        id_val = int(id)
+    except (ValueError, TypeError):
+        id_val = id
+
+    return jsonify({
+        "mensaje": "Estudiante actualizado correctamente.",
+        "id": id_val
+    }), 200
+
+
+# 4. Eliminar un estudiante
+# Método: DELETE /estudiantes/<id>
+@estudiantes_endpoints.route('/estudiantes/<id>', methods=['DELETE'])
+def delete_estudiante(id):
+    try:
+        id_val = int(id)
+    except (ValueError, TypeError):
+        id_val = id
+
+    return jsonify({
+        "mensaje": "Estudiante eliminado correctamente.",
+        "id": id_val
+    }), 200
